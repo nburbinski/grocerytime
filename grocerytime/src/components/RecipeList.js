@@ -1,16 +1,24 @@
 import React, { useState } from "react";
+import { connect } from "react-redux";
+import axios from "axios";
+
 import Recipe from "./Recipe";
+import SearchResults from "./SearchResults";
 
-const RecipeList = ({ ingredients }) => {
+const RecipeList = props => {
   const [grocery, setGrocery] = useState("");
-  const [ingredient, setIngredient] = useState("");
-  const [recipeIngredient, setRecipeIngredient] = useState(ingredients);
+  const [recipeIngredients, setRecipeIngredients] = useState(["test", "test"]);
 
-  const [recipes, setRecipes] = useState([
-    { name: "Chicken Alfredo", ingredients: ["chicken, alfredo"] },
-    { name: "Bulgogi", ingredients: ["chicken, miso"] },
-    { name: "Tikka Masala", ingredients: ["chicken, sauce"] }
-  ]);
+  const [recipeSearch, setRecipeSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+
+  // Delete Grocery
+  const handleGroceryDelete = name => {
+    props.store.dispatch({
+      type: "DEL_RECIPE",
+      data: name
+    });
+  };
 
   // Add Grocery
   const add = () => {
@@ -18,57 +26,66 @@ const RecipeList = ({ ingredients }) => {
 
     const newRecipe = {
       name: grocery,
-      ingredients: ingredients
+      ingredients: recipeIngredients
     };
 
-    setRecipes(recipes.concat({ ...newRecipe }));
+    props.store.dispatch({
+      type: "ON",
+      data: {
+        content: `${grocery} added`
+      }
+    });
+
+    props.store.dispatch({
+      type: "ADD_RECIPE",
+      data: newRecipe
+    });
     setGrocery("");
   };
+
+  const handleSearch = async () => {
+    const response = await axios.get(
+      `https://api.spoonacular.com/recipes/search/?apiKey=b2956dde1fd04222977b0a3bdf9768ac&query=${recipeSearch}`
+    );
+
+    if (response.data.results.length === 0) {
+      setSearchResults(["None Found"]);
+      setRecipeSearch("");
+    } else {
+      setSearchResults(response.data.results);
+      setRecipeSearch("");
+    }
+  };
+
   return (
     <div className="container">
+      <div>
+        <input onChange={({ target }) => setRecipeSearch(target.value)}></input>
+        <button onClick={handleSearch}>Search</button>
+      </div>
+      <h4>Search for a new Recipe!</h4>
+      <SearchResults results={searchResults} />
       <table>
         <thead>
           <tr>
             <th></th>
             <th>Recipe Name</th>
-            <th>Ingredient</th>
+            <th>Ingredients</th>
             <th>Delete?</th>
           </tr>
         </thead>
         <tbody>
-          {recipes.map(recipe => {
-            return (
-              <Recipe
-                key={recipes.indexOf(recipe)}
-                recipes={recipes}
-                recipe={recipe}
-                setRecipes={setRecipes}
-              />
-            );
-          })}
+          {props.recipes.map(recipe => (
+            <Recipe recipe={recipe} handleDelete={handleGroceryDelete} />
+          ))}
           <tr>
             <td>
               <button onClick={add}>+</button>
             </td>
-            <td>
-              <input
-                value={grocery}
-                onChange={({ target }) => setGrocery(target.value)}
-              ></input>
-            </td>
-            <td>
-              <select
-                multiple={true}
-                value={recipeIngredient}
-                onChange={({ target }) => setRecipeIngredient(target.value)}
-              >
-                {ingredients.map(i => (
-                  <option key={ingredients.indexOf(i)} value={i.name}>
-                    {i.name}
-                  </option>
-                ))}
-              </select>
-            </td>
+            <input
+              value={grocery}
+              onChange={({ target }) => setGrocery(target.value)}
+            ></input>
           </tr>
         </tbody>
       </table>
@@ -76,4 +93,12 @@ const RecipeList = ({ ingredients }) => {
   );
 };
 
-export default RecipeList;
+const mapStateToProps = state => {
+  return {
+    recipes: state.recipes
+  };
+};
+
+const connectedRecipes = connect(mapStateToProps)(RecipeList);
+
+export default connectedRecipes;

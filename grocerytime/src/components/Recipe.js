@@ -1,16 +1,13 @@
 import React from "react";
 
-const Recipe = ({ recipes, recipe, setRecipes }) => {
-  const handleDelete = () => {
-    setRecipes(recipes.filter(r => r.name !== recipe.name));
-  };
+const Recipe = ({ recipe, handleDelete }) => {
   return (
     <tr>
       <td></td>
       <td>{recipe.name}</td>
-      <td>{recipe.ingredients}</td>
+      <td className="recipe-ingredients">{recipe.ingredients.join(", ")}</td>
       <td>
-        <button onClick={handleDelete}>X</button>
+        <button onClick={() => handleDelete(recipe.name)}>X</button>
       </td>
     </tr>
   );

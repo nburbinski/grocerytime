@@ -1,18 +1,31 @@
 import React, { useState } from "react";
-import Ingredient from "./Ingredient";
+import { connect } from "react-redux";
 
-const IngredientList = ({ ingredients, setIngredients }) => {
+import Ingredient from "./Ingredient";
+import {
+  addIngredient,
+  delIngredient,
+  updateIngredient
+} from "../reducers/IngredientReducer";
+
+const IngredientList = props => {
   const [grocery, setGrocery] = useState("");
-  const [measurement, setMeasurement] = useState("oz");
+  const [measurement, setMeasurement] = useState("oz(s)");
   const [amount, setAmount] = useState(1);
 
-  // Add Grocery
-  const add = () => {
+  // Delete Ingredient
+  const handleIngredientDelete = name => {
+    props.delIngredient(name);
+  };
+
+  // Add Ingredient
+  const handleIngredientAdd = () => {
+    // Check if grocery is empty
     if (grocery === "") return;
 
-    const found = ingredients.find(g => g.name === grocery);
+    const found = props.ingredients.find(g => g.name === grocery);
 
-    // If ingredient exists, increase amount
+    // If ingredient exists, update amount
     if (found) {
       const newIngredient = {
         name: found.name,
@@ -20,30 +33,26 @@ const IngredientList = ({ ingredients, setIngredients }) => {
         measurement: found.measurement
       };
 
-      setIngredients(
-        ingredients.map(g =>
-          g.name === newIngredient.name ? (g = newIngredient) : g
-        )
-      );
+      props.updateIngredient(newIngredient);
       setGrocery("");
       setAmount("1");
-      setMeasurement("oz");
+      setMeasurement("oz(s)");
       return;
     }
 
-    // Otherwise, create ingredient and add to list
-
+    // Otherwise, add new ingredient
     const newIngredient = {
       name: grocery,
-      amount: amount,
-      measurement: measurement
+      amount,
+      measurement
     };
+    props.addIngredient(newIngredient);
 
-    setIngredients(ingredients.concat({ ...newIngredient }));
     setGrocery("");
     setAmount("1");
-    setMeasurement("oz");
+    setMeasurement("oz(s)");
   };
+
   return (
     <div className="container">
       <table>
@@ -56,20 +65,22 @@ const IngredientList = ({ ingredients, setIngredients }) => {
           </tr>
         </thead>
         <tbody>
-          {ingredients.map(ingredient => {
+          {props.ingredients.map(ingredient => {
             return (
               <Ingredient
-                key={ingredients.indexOf(ingredient)}
-                ingredients={ingredients}
+                key={props.ingredients.indexOf(ingredient)}
+                ingredients={props.ingredients}
                 ingredient={ingredient}
-                setIngredients={setIngredients}
                 measurement={measurement}
+                handleDelete={handleIngredientDelete}
               />
             );
           })}
           <tr>
             <td>
-              <button onClick={add}>+</button>
+              <button onClick={handleIngredientAdd} className="btn-add">
+                +
+              </button>
             </td>
             <td>
               <input
@@ -93,15 +104,13 @@ const IngredientList = ({ ingredients, setIngredients }) => {
                 <option>9</option>
                 <option>10</option>
               </select>
-            </td>
-            <td>
               <select
                 value={measurement}
                 onChange={({ target }) => setMeasurement(target.value)}
               >
-                <option>oz</option>
-                <option>cup</option>
-                <option>lb</option>
+                <option>oz(s)</option>
+                <option>cup(s)</option>
+                <option>lb(s)</option>
               </select>
             </td>
           </tr>
@@ -111,4 +120,21 @@ const IngredientList = ({ ingredients, setIngredients }) => {
   );
 };
 
-export default IngredientList;
+const mapStateToProps = state => {
+  return {
+    ingredients: state.ingredients
+  };
+};
+
+const mapDispatchToProps = {
+  addIngredient,
+  delIngredient,
+  updateIngredient
+};
+
+const connectedIngredients = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(IngredientList);
+
+export default connectedIngredients;

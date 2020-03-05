@@ -1,19 +1,28 @@
 import React from "react";
+import axios from "axios";
 
-const Ingredient = ({ ingredients, ingredient, setIngredients }) => {
-  const handleDelete = () => {
-    setIngredients(ingredients.filter(g => g.name !== ingredient.name));
+const Ingredient = ({ ingredient, handleDelete }) => {
+  const handleSearch = async () => {
+    const response = await axios.get(
+      `https://api.spoonacular.com/recipes/search?query=${ingredient.name}`
+    );
   };
   return (
-    <tr>
-      <td></td>
+    <tr className="test">
+      <td className="btn-search">
+        <button onClick={handleSearch}>Search</button>
+      </td>
       <td>{ingredient.name}</td>
       <td>
-        {ingredient.amount}
-        {ingredient.measurement}
+        {ingredient.amount} {ingredient.measurement}
       </td>
       <td>
-        <button onClick={handleDelete}>X</button>
+        <button
+          className="btn-delete"
+          onClick={() => handleDelete(ingredient.name)}
+        >
+          X
+        </button>
       </td>
     </tr>
   );
